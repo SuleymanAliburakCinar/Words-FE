@@ -1,0 +1,50 @@
+.home-page-container {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+}
+
+.input-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.group-list {
+  width: 300px;
+  border: 1px solid black;
+  padding: 10px;
+  height: 300px;
+  overflow-y: auto;
+}
+
+.group-item {
+  padding: 10px;
+  margin: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.group-item:hover {
+  background-color: #e0f0ff;
+}
+
+.group-item.selected {
+  border: 2px solid #007bff;
+  background-color: #e0f0ff;
+  font-weight: bold;
+}
+
+.button {
+  color: white;
+}
+
+.button.update {
+  background-color: green;
+}
+
+.button.delete {
+  background-color: red;
+}

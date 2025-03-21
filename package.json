@@ -1,0 +1,51 @@
+{
+  "name": "fe",
+  "version": "1.0.0",
+  "main": "public/electron.js",
+  "scripts": {
+    "build": "react-scripts build && npm run electron:build",
+    "electron": "electron .",
+    "dev": "concurrently \"npm run start\" \"npm run electron\"",
+    "electron:build": "electron-builder"
+  },
+  "dependencies": {
+    "concurrently": "^7.0.0",
+    "electron-is-dev": "^3.0.1",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-router-dom": "^7.2.0",
+    "react-scripts": "^5.0.1"
+  },
+  "devDependencies": {
+    "electron": "^34.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "build": {
+    "appId": "com.example.words",
+    "productName": "WordsApp",
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "artifactName": "WordsApp.exe"
+    },
+    "files": [
+      "public/electron.js",
+      "package.json",
+      "node_modules/**/*",
+      "build/**/*"
+    ]
+  }
+}

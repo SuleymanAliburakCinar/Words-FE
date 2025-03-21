@@ -1,0 +1,46 @@
+.add-word-container {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+}
+
+.input-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.word-list {
+  width: 300px;
+  border: 1px solid black;
+  padding: 10px;
+  height: 300px;
+  overflow-y: auto;
+}
+
+.word-item {
+  padding: 10px;
+  margin: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.word-item:hover {
+  background-color: #f0f0f0;
+}
+
+.word-item.selected {
+  border: 2px solid #007bff;
+  background-color: #e0f0ff;
+  font-weight: bold;
+}
+
+button.update{
+  background-color: green
+}
+
+button.delete{
+  background-color: red
+}

@@ -1,0 +1,25 @@
+.popup {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  border-radius: 5px;
+  color: white;
+  font-weight: bold;
+  text-align: center;
+  z-index: 1000;
+  animation: fadeOut 3s ease-in-out;
+}
+
+.popup.success {
+  background-color: green;
+}
+
+.popup.error {
+  background-color: red;
+}
+
+@keyframes fadeOut {
+  0% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(50px); }
+}
