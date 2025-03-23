@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {useParams} from "react-router-dom";
+import { getWordsByGroupId, saveWord, updateWord, deleteWord } from '../services/wordApi';
 import "./AddWordPage.css";
 import "./Popup.css";
 
@@ -20,42 +21,30 @@ function AddWordPage() {
 
   const fetchWords = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/words/getByGroupId/${id}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-      const data = await response.json();
+      const {data} = await getWordsByGroupId(id);
       setWords(data);
     } catch (error) {
       console.error('Kelimeler alınırken hata oluştu', error);
     }
   };
 
-  const addWord = async () => {
+  const fetchSaveWord = async () => {
     const newWord = { "name": word, "mean": mean, "group": {"id":id} };
     try {
-      const response = await fetch('http://localhost:8080/words', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newWord),
-      });
+      const response = await saveWord(newWord)
 
-      if (response.ok) {
-        setPopupMessage('Kelime başarıyla eklendi');
+      if (response.status === 200) {
+        setPopupMessage('Word Added');
         setPopupType('success');
         setWord('');
         setMean('');
         fetchWords();
       } else {
-        setPopupMessage('Kelime eklenirken hata oluştu');
+        setPopupMessage('Error occured while adding word');
         setPopupType('error');
       }
     } catch (error) {
-      setPopupMessage('Bağlantı hatası');
+      setPopupMessage('Connection Error');
       setPopupType('error');
     }
 
@@ -67,18 +56,12 @@ function AddWordPage() {
     setMean("")
   };
 
-  const updateWord = async () => {
-    const newWord = { "name": word, "mean": mean };
+  const fetchUpdateWord = async () => {
+    const updatedWord = { "name": word, "mean": mean };
     try {
-      const response = await fetch('http://localhost:8080/words', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newWord),
-      });
+      const response = await updateWord(selectedWord.id, updatedWord);
 
-      if (response.ok) {
+      if (response.status === 200) {
         setPopupMessage('Word updated');
         setPopupType('success');
         setWord('');
@@ -101,16 +84,11 @@ function AddWordPage() {
     setMean("")
   };
 
-  const deleteWord = async () => {
+  const fetchDeleteWord = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/words/${word}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
+      const response = await deleteWord(word);
 
-      if (response.ok) {
+      if (response.status === 204) {
         setPopupMessage('Word deleted.');
         setPopupType('success');
         setWord('');
@@ -134,8 +112,8 @@ function AddWordPage() {
   };
 
   const saveOrUpdate = () => {
-      if(selectedWord && selectedWord.name == word) updateWord();
-      else addWord();
+      if(selectedWord) fetchUpdateWord();
+      else fetchSaveWord();
   };
 
   const handleSelectWord = (selected) => {
@@ -172,7 +150,7 @@ function AddWordPage() {
         </button>
         <button
           className={"button delete"}
-          onClick={deleteWord}>
+          onClick={fetchDeleteWord}>
             Delete
         </button>
       </div>
