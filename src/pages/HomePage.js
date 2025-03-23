@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
+import { getGroups, saveGroup, deleteGroup, updateGroup } from '../services/groupApi';
 import "./HomePage.css";
 import "./Popup.css";
 
@@ -19,13 +20,7 @@ function HomePage(){
 
   const fetchGetGroups = async () => {
     try{
-      const response = await fetch('http://localhost:8080/groups', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-      const data = await response.json();
+      const {data} = await getGroups();
       setGroups(data);
     } catch(error){
       console.error('Error occurred while taking group information', error);
@@ -33,23 +28,16 @@ function HomePage(){
   }
   
   const fetchAddGroups = async () => {
-    const newGroup = {"name": group};
     try{
-      const response = await fetch('http://localhost:8080/groups', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newGroup),
-      });
-
-      if (response.ok) {
+      const response = await saveGroup({"name": group});
+      
+      if (response.status === 200) {
         setPopupMessage('Group Added');
         setPopupType('success');
         setGroup('');
         fetchGetGroups();
       } else {
-        setPopupMessage('Error was occurred while adding new group');
+        setPopupMessage('Error occurred while adding new group');
         setPopupType('error');
       }
     } catch(error){
@@ -60,14 +48,9 @@ function HomePage(){
 
   const fetchDeleteGroup = async () => {
     try{
-      const response = await fetch(`http://localhost:8080/groups/${group}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
+      const response = await deleteGroup(group);
 
-      if (response.ok) {
+      if (response.status === 204) {
         setPopupMessage('Group Deleted');
         setPopupType('success');
         setGroup('');
@@ -84,14 +67,9 @@ function HomePage(){
 
   const fetchUpdateGroups = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/groups/${selectedGroup.name}/${group}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
+      const response = await updateGroup(selectedGroup.name, group);
 
-      if (response.ok) {
+      if (response.status === 200) {
         setPopupMessage('Group Added');
         setPopupType('success');
         setGroup('');
