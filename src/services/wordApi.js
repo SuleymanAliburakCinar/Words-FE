@@ -15,3 +15,15 @@ export const updateWord = (id, updatedWord) => {
 export const deleteWord = (wordName) => {
   return axiosClient.delete(`/words/${wordName}`);
 }
+
+export const getConclusion = (requestBody) => {
+  return axiosClient.post('/words/getConclusion', requestBody);
+}
+
+export const getByRate = (requestBody) => {
+  return axiosClient.post('/words/getByRate', requestBody);
+}
+
+export const getByRateAndGroup = (requestBody) => {
+  return axiosClient.post('/words/getByRateAndGroup', requestBody);
+}
