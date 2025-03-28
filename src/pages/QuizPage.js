@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { getConclusion, getByRate, getByRateAndGroup } from '../services/wordApi';
+import { getGroups } from '../services/groupApi';
 import "./QuizPage.css";
 
 function QuizSetup({ count, setCount, rate, setRate, handleStart, library, setLibrary, libraries }) {
@@ -47,7 +49,8 @@ function QuizPage() {
   const [step, setStep] = useState(1);
   const [count, setCount] = useState('');
   const [rate, setRate] = useState('');
-  const [words, setWords] = useState([]); // Örnek kelime
+  const [words, setWords] = useState([]);
+  const [answers, setAnswers] = useState([]);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [mean, setMean] = useState('');
   const [feedback, setFeedback] = useState('');
@@ -65,71 +68,47 @@ function QuizPage() {
       return;
     }
 
-    const url = library.name === "All" ? "http://localhost:8080/words/getByRate" : "http://localhost:8080/words/getByRateAndGroup";
     const body = library.name === "All" ? {"rate":rate, "count":count} : {"rate":rate, "count":count, "groupId": library.id};
 
     try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
+      let response;
+      if (library.name === "All") response = await getByRate(body);
+      else response = await getByRateAndGroup(body);
 
-      if (!response.ok) {
-        throw new Error("API isteği başarısız!");
+      if (response.status !== 200) {
+        throw new Error("Failed API Request");
       }
 
-      const data = await response.json();
-      setWords(data);
+      setWords(response.data);
       setStep(2);
     } catch (error) {
-      console.error("API Hatası:", error);
-      alert("Veri alınırken hata oluştu!");
+      console.error("API Error", error);
+      alert("Error occured");
     }
   };
 
   const handleSubmit = async () => {
     if (!mean) return;
-    try {
-      const response = await fetch("http://localhost:8080/words/checkAnswer", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: words[currentWordIndex].name,
-          mean: mean
-        })
-      });
-      const result = await response.json();
-      if (result) {
-        setCorrectAnswers(correctAnswers + 1);
+    answers.push(mean);
+    setMean("");
+
+    if (currentWordIndex + 1 < words.length) {
+      setCurrentWordIndex(currentWordIndex + 1);
+    } else {
+      setCurrentWordIndex(0);
+      const body = {
+        questionList: words.map(word => word.name),
+        answerList: answers
       }
-      setFeedback(result ? "Doğru!" : "Yanlış!");
-      setTimeout(() => {
-        setFeedback("");
-        setMean("");
-        if (currentWordIndex + 1 < words.length) {
-          setCurrentWordIndex(currentWordIndex + 1);
-        } else {
-          const successRate = ((correctAnswers / words.length) * 100).toFixed(2);
-          alert(`Quiz Completed! Success Rate: ${successRate}%`);
-          setCorrectAnswers(0);
-          setStep(1);
-        }
-      }, 1500);
-    } catch (error) {
-      console.error("API Error:", error);
+      const {data} = await getConclusion(body);
+      setAnswers([])
+      setStep(1);
     }
   };
 
   const getLibraries = async () => {
     try{
-      const response = await fetch('http://localhost:8080/groups', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-      const data = await response.json();
+      const {data} = await getGroups();
       setLibraries([{"id":0, "name":"All"}]);
       setLibraries(libraries.concat(data));
     } catch (error) {
