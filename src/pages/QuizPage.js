@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getConclusion, getByRate, getByRateAndGroup } from '../services/wordApi';
 import { getGroups } from '../services/groupApi';
+import SummaryCard from '../component/SummaryCard';
 import "./QuizPage.css";
 
 function QuizSetup({ count, setCount, rate, setRate, handleStart, library, setLibrary, libraries }) {
@@ -54,9 +55,11 @@ function QuizPage() {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [mean, setMean] = useState('');
   const [feedback, setFeedback] = useState('');
-  const [correctAnswers, setCorrectAnswers] = useState(0);
   const [library, setLibrary] = useState({"id":0, "name":"All"});
   const [libraries, setLibraries] = useState([{"id":0, "name":"All"}]);
+  const [successRate, setSuccessRate] = useState(0.0);
+  const [difficulty, setDifficulty] = useState(0.0);
+  const [wrongAnswered, setWrongAnswered] = useState([]);
 
   useEffect(() => {
     getLibraries();
@@ -80,6 +83,8 @@ function QuizPage() {
       }
 
       setWords(response.data);
+      setCount("");
+      setRate("");
       setStep(2);
     } catch (error) {
       console.error("API Error", error);
@@ -102,7 +107,10 @@ function QuizPage() {
       }
       const {data} = await getConclusion(body);
       setAnswers([])
-      setStep(1);
+      setSuccessRate(data["Success Rate"])
+      setDifficulty(data["Difficulty"])
+      setWrongAnswered(data["Your Answer"])
+      setStep(3);
     }
   };
 
@@ -118,7 +126,7 @@ function QuizPage() {
 
   return (
     <div className="quiz-container">
-      {step === 1 ? (
+      {step === 1 && (
         <QuizSetup
           count={count}
           setCount={setCount}
@@ -129,7 +137,8 @@ function QuizPage() {
           setLibrary={setLibrary}
           libraries={libraries}
         />
-      ) : (
+      )}
+      {step === 2 && (
         <QuizQuestion
           word={words[currentWordIndex]?.name || ""}
           mean={mean}
@@ -137,6 +146,18 @@ function QuizPage() {
           handleSubmit={handleSubmit}
           feedback={feedback}
         />
+      )}
+      {step === 3 && (
+        <div>
+          <SummaryCard
+            correct={words.length-wrongAnswered.length}
+            total={words.length}
+            successRate={successRate.toFixed(2)}
+            difficulty={(difficulty/words.length*100).toFixed(2)}
+          />
+          <button color='red'>face it</button>
+          <button onClick={() => setStep(1)}>return</button>
+        </div>
       )}
     </div>
   );
