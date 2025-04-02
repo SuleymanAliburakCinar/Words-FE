@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getConclusion, getByRate, getByRateAndGroup } from '../services/wordApi';
 import { getGroups } from '../services/groupApi';
 import SummaryCard from '../component/SummaryCard';
+import WordCardSlider from '../component/WordCardSlider';
 import "./QuizPage.css";
 
 function QuizSetup({ count, setCount, rate, setRate, handleStart, library, setLibrary, libraries }) {
@@ -59,7 +60,7 @@ function QuizPage() {
   const [libraries, setLibraries] = useState([{"id":0, "name":"All"}]);
   const [successRate, setSuccessRate] = useState(0.0);
   const [difficulty, setDifficulty] = useState(0.0);
-  const [wrongAnswered, setWrongAnswered] = useState([]);
+  const [cards, setCards] = useState([]);
 
   useEffect(() => {
     getLibraries();
@@ -106,10 +107,10 @@ function QuizPage() {
         answerList: answers
       }
       const {data} = await getConclusion(body);
-      setAnswers([])
-      setSuccessRate(data["Success Rate"])
-      setDifficulty(data["Difficulty"])
-      setWrongAnswered(data["Your Answer"])
+      setAnswers([]);
+      setSuccessRate(data["successRate"]);
+      setDifficulty(data["difficulty"]) ;
+      setCards(data["cards"])
       setStep(3);
     }
   };
@@ -150,12 +151,20 @@ function QuizPage() {
       {step === 3 && (
         <div>
           <SummaryCard
-            correct={words.length-wrongAnswered.length}
+            correct={words.length-cards.length}
             total={words.length}
             successRate={successRate.toFixed(2)}
             difficulty={(difficulty/words.length*100).toFixed(2)}
           />
-          <button color='red'>face it</button>
+          <button onClick={() => setStep(4)}>face it</button>
+          <button onClick={() => setStep(1)}>return</button>
+        </div>
+      )}
+      {step === 4 && (
+        <div>
+          <WordCardSlider
+            cards={cards}
+          />
           <button onClick={() => setStep(1)}>return</button>
         </div>
       )}
