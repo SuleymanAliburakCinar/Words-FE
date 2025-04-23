@@ -4,7 +4,7 @@ import { getGroups, saveGroup, deleteGroup, updateGroup } from '../services/grou
 import "./HomePage.css";
 import "./Popup.css";
 
-function HomePage(){
+function HomePage() {
 
   const navigate = useNavigate();
 
@@ -15,22 +15,22 @@ function HomePage(){
   const [selectedGroup, setSelectedGroup] = useState(null);
 
   useEffect(() => {
-      fetchGetGroups();
+    fetchGetGroups();
   }, []);
 
   const fetchGetGroups = async () => {
-    try{
-      const {data} = await getGroups();
+    try {
+      const { data } = await getGroups();
       setGroups(data);
-    } catch(error){
+    } catch (error) {
       console.error('Error occurred while taking group information', error);
     }
   }
-  
+
   const fetchAddGroups = async () => {
-    try{
-      const response = await saveGroup({"name": group});
-      
+    try {
+      const response = await saveGroup({ "name": group });
+
       if (response.status === 200) {
         setPopupMessage('Group Added');
         setPopupType('success');
@@ -40,14 +40,14 @@ function HomePage(){
         setPopupMessage('Error occurred while adding new group');
         setPopupType('error');
       }
-    } catch(error){
+    } catch (error) {
       setPopupMessage('Connection Error');
       setPopupType('error');
     }
   }
 
   const fetchDeleteGroup = async () => {
-    try{
+    try {
       const response = await deleteGroup(group);
 
       if (response.status === 204) {
@@ -59,7 +59,7 @@ function HomePage(){
         setPopupMessage('Error was occurred while deleting new group');
         setPopupType('error');
       }
-    } catch(error){
+    } catch (error) {
       setPopupMessage('Connection Error');
       setPopupType('error');
     }
@@ -78,14 +78,14 @@ function HomePage(){
         setPopupMessage('Error was occurred while adding new group');
         setPopupType('error');
       }
-    } catch(error){
+    } catch (error) {
       setPopupMessage('Connection Error');
       setPopupType('error');
     }
   }
 
   const handleSelectWord = (selected) => {
-    if(selected == selectedGroup) {
+    if (selected == selectedGroup) {
       setSelectedGroup(null);
       setGroup("");
     }
@@ -95,7 +95,7 @@ function HomePage(){
     }
   }
 
-  return(
+  return (
     <div className="home-page-container">
       <div className="input-section">
         <input
@@ -106,7 +106,7 @@ function HomePage(){
         />
         <button
           className={`button ${selectedGroup ? "update" : "save"}`}
-          onClick={selectedGroup ? fetchUpdateGroups :fetchAddGroups}
+          onClick={selectedGroup ? fetchUpdateGroups : fetchAddGroups}
         >
           {selectedGroup ? 'Update' : 'Save'}</button>
         <button className='button delete' onClick={fetchDeleteGroup}>Delete</button>

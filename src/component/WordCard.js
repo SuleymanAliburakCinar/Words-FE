@@ -1,7 +1,7 @@
 import React from "react";
 import "./WordCard.css";
 
-const WordCard = ({word, mean, wrongAnswer}) => {
+const WordCard = ({ word, mean, wrongAnswer }) => {
 
   return (
     <div className="word-card">

@@ -37,10 +37,10 @@
   font-weight: bold;
 }
 
-button.update{
+button.update {
   background-color: green
 }
 
-button.delete{
+button.delete {
   background-color: red
 }
