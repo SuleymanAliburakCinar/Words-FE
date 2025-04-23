@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getConclusion, getByRate, getByRateAndGroup } from '../services/wordApi';
+import { getConclusion, getQuiz } from '../services/wordApi';
 import { getGroups } from '../services/groupApi';
 import SummaryCard from '../component/SummaryCard';
 import WordCardSlider from '../component/WordCardSlider';
@@ -21,11 +21,11 @@ function QuizSetup({ count, setCount, rate, setRate, handleStart, library, setLi
         onChange={(e) => setRate(e.target.value)}
       />
       <label>Library</label>
-        <select value={library.id} onChange={(e) => setLibrary(libraries.find(lib => lib.id === Number(e.target.value)))}>
-          {libraries.map((lib) => (
-            <option key={lib.id} value={lib.id}>{lib.name}</option>
-          ))}
-        </select>
+      <select value={library.id} onChange={(e) => setLibrary(libraries.find(lib => lib.id === Number(e.target.value)))}>
+        {libraries.map((lib) => (
+          <option key={lib.id} value={lib.id}>{lib.name}</option>
+        ))}
+      </select>
       <button onClick={handleStart}>Start</button>
     </div>
   );
@@ -56,8 +56,8 @@ function QuizPage() {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [mean, setMean] = useState('');
   const [feedback, setFeedback] = useState('');
-  const [library, setLibrary] = useState({"id":0, "name":"All"});
-  const [libraries, setLibraries] = useState([{"id":0, "name":"All"}]);
+  const [library, setLibrary] = useState({ "id": 0, "name": "All" });
+  const [libraries, setLibraries] = useState([{ "id": 0, "name": "All" }]);
   const [successRate, setSuccessRate] = useState(0.0);
   const [difficulty, setDifficulty] = useState(0.0);
   const [cards, setCards] = useState([]);
@@ -72,18 +72,17 @@ function QuizPage() {
       return;
     }
 
-    const body = library.name === "All" ? {"rate":rate, "count":count} : {"rate":rate, "count":count, "groupId": library.id};
+    const body = library.name === "All" ? { "rate": rate, "count": count } : { "rate": rate, "count": count, "groupId": library.id };
 
     try {
-      let response;
-      if (library.name === "All") response = await getByRate(body);
-      else response = await getByRateAndGroup(body);
+      const response = await getQuiz(body);
 
       if (response.status !== 200) {
         throw new Error("Failed API Request");
       }
 
-      setWords(response.data);
+      setWords(response.data.questionList);
+      setDifficulty(response.data.difficulty)
       setCount("");
       setRate("");
       setStep(2);
@@ -95,30 +94,29 @@ function QuizPage() {
 
   const handleSubmit = async () => {
     if (!mean) return;
-    answers.push(mean);
-    setMean("");
+
+    if (currentWordIndex === 0) {
+      setCards([]);      
+    }
+
+    let word = words[currentWordIndex];
+    if (mean !== word.mean) {
+      setCards(prevCards => [...prevCards, { "name": word.name, "mean": word.mean, "yourAnswer": mean }]);
+    }
 
     if (currentWordIndex + 1 < words.length) {
       setCurrentWordIndex(currentWordIndex + 1);
     } else {
       setCurrentWordIndex(0);
-      const body = {
-        questionList: words.map(word => word.name),
-        answerList: answers
-      }
-      const {data} = await getConclusion(body);
-      setAnswers([]);
-      setSuccessRate(data["successRate"]);
-      setDifficulty(data["difficulty"]) ;
-      setCards(data["cards"])
       setStep(3);
     }
+    setMean("")
   };
 
   const getLibraries = async () => {
-    try{
-      const {data} = await getGroups();
-      setLibraries([{"id":0, "name":"All"}]);
+    try {
+      const { data } = await getGroups();
+      setLibraries([{ "id": 0, "name": "All" }]);
       setLibraries(libraries.concat(data));
     } catch (error) {
       console.error("API Error:", error);
@@ -151,10 +149,9 @@ function QuizPage() {
       {step === 3 && (
         <div>
           <SummaryCard
-            correct={words.length-cards.length}
+            correct={words.length - cards.length}
             total={words.length}
-            successRate={successRate.toFixed(2)}
-            difficulty={(difficulty/words.length*100).toFixed(2)}
+            difficulty={difficulty.toFixed(2)}
           />
           <button onClick={() => setStep(4)}>face it</button>
           <button onClick={() => setStep(1)}>return</button>

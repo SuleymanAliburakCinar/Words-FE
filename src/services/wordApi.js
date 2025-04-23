@@ -12,16 +12,16 @@ export const updateWord = (id, updatedWord) => {
   return axiosClient.put(`/words/${id}`, updatedWord);
 }
 
-export const deleteWord = (wordName) => {
-  return axiosClient.delete(`/words/${wordName}`);
+export const deleteWord = (wordId) => {
+  return axiosClient.delete(`/words/${wordId}`);
 }
 
 export const getConclusion = (requestBody) => {
   return axiosClient.post('/words/getConclusion', requestBody);
 }
 
-export const getByRate = (requestBody) => {
-  return axiosClient.post('/words/getByRate', requestBody);
+export const getQuiz = (requestBody) => {
+  return axiosClient.post('/words/quiz', requestBody);
 }
 
 export const getByRateAndGroup = (requestBody) => {

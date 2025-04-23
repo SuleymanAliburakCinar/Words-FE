@@ -29,7 +29,7 @@ function AddWordPage() {
   };
 
   const fetchSaveWord = async () => {
-    const newWord = { "name": word, "mean": mean, "group": {"id":id} };
+    const newWord = { "name": word, "mean": mean, "groupId": id };
     try {
       const response = await saveWord(newWord)
 
@@ -57,7 +57,7 @@ function AddWordPage() {
   };
 
   const fetchUpdateWord = async () => {
-    const updatedWord = { "name": word, "mean": mean };
+    const updatedWord = { "name": word, "mean": mean, "groupId": id };
     try {
       const response = await updateWord(selectedWord.id, updatedWord);
 
@@ -72,7 +72,7 @@ function AddWordPage() {
         setPopupType('error');
       }
     } catch (error) {
-      setPopupMessage('Connection error');
+      setPopupMessage(error.response.data.message ? error.response.data.message : "Connection Error");
       setPopupType('error');
     }
 
@@ -80,13 +80,11 @@ function AddWordPage() {
       setPopupMessage('');
       setPopupType('');
     }, 3000);
-    setWord("");
-    setMean("")
   };
 
   const fetchDeleteWord = async () => {
     try {
-      const response = await deleteWord(word);
+      const response = await deleteWord(selectedWord.id);
 
       if (response.status === 204) {
         setPopupMessage('Word deleted.');
@@ -148,11 +146,13 @@ function AddWordPage() {
           onClick={saveOrUpdate}>
             {selectedWord? 'Update' : 'Save'}
         </button>
-        <button
+        {selectedWord == null ? null :
+        (<button
           className={"button delete"}
           onClick={fetchDeleteWord}>
             Delete
-        </button>
+        </button>)
+        }
       </div>
       <div className="word-list">
         {words.map((w, index) => (
