@@ -96,7 +96,7 @@ function QuizPage() {
     if (!mean) return;
 
     if (currentWordIndex === 0) {
-      setCards([]);      
+      setCards([]);
     }
 
     let word = words[currentWordIndex];

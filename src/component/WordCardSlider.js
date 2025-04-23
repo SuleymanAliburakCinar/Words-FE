@@ -4,7 +4,7 @@ import "./WordCardSlider.css";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 const WordCardSlider = ({ cards }) => {
-    
+
   const [currentIndex, setCurrentIndex] = useState(0);
 
   if (!cards || cards.length === 0) {
@@ -44,9 +44,8 @@ const WordCardSlider = ({ cards }) => {
               key={index}
               className={`slide ${isActive ? "active" : ""}`}
               style={{
-                transform: `translateX(${position * 60}%) scale(${
-                  isActive ? 1 : 0.85
-                })`,
+                transform: `translateX(${position * 60}%) scale(${isActive ? 1 : 0.85
+                  })`,
                 opacity: isActive ? 1 : 0.6,
               }}
             >

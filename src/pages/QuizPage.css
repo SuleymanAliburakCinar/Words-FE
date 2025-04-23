@@ -5,7 +5,8 @@
   height: 75vh;
 }
 
-.setup-section, .quiz-section {
+.setup-section,
+.quiz-section {
   display: flex;
   flex-direction: column;
   align-items: center;

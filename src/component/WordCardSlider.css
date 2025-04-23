@@ -46,9 +46,11 @@
 }
 
 .nav-button.left {
-  left: 20px; /* Kartın sol kenarı + 20px boşluk + ok genişliği */
+  left: 20px;
+  /* Kartın sol kenarı + 20px boşluk + ok genişliği */
 }
 
 .nav-button.right {
-  right: 20px; /* Kartın sağ kenarı + 20px boşluk */
+  right: 20px;
+  /* Kartın sağ kenarı + 20px boşluk */
 }

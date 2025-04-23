@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {useParams} from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { getWordsByGroupId, saveWord, updateWord, deleteWord } from '../services/wordApi';
 import "./AddWordPage.css";
 import "./Popup.css";
@@ -13,7 +13,7 @@ function AddWordPage() {
   const [words, setWords] = useState([]);
   const [selectedWord, setSelectedWord] = useState(null);
 
-  const {id} = useParams();
+  const { id } = useParams();
 
   useEffect(() => {
     fetchWords();
@@ -21,7 +21,7 @@ function AddWordPage() {
 
   const fetchWords = async () => {
     try {
-      const {data} = await getWordsByGroupId(id);
+      const { data } = await getWordsByGroupId(id);
       setWords(data);
     } catch (error) {
       console.error('Kelimeler alınırken hata oluştu', error);
@@ -110,20 +110,20 @@ function AddWordPage() {
   };
 
   const saveOrUpdate = () => {
-      if(selectedWord) fetchUpdateWord();
-      else fetchSaveWord();
+    if (selectedWord) fetchUpdateWord();
+    else fetchSaveWord();
   };
 
   const handleSelectWord = (selected) => {
-      if(selected === selectedWord){
-        setSelectedWord(null)
-        setWord("");
-        setMean("");
-        return;
-      }
-      setSelectedWord(selected);
-      setWord(selected.name);
-      setMean(selected.mean);
+    if (selected === selectedWord) {
+      setSelectedWord(null)
+      setWord("");
+      setMean("");
+      return;
+    }
+    setSelectedWord(selected);
+    setWord(selected.name);
+    setMean(selected.mean);
   };
 
   return (
@@ -142,16 +142,16 @@ function AddWordPage() {
           onChange={(e) => setMean(e.target.value)}
         />
         <button
-          className={`button ${selectedWord ?'update' : ''}`}
+          className={`button ${selectedWord ? 'update' : ''}`}
           onClick={saveOrUpdate}>
-            {selectedWord? 'Update' : 'Save'}
+          {selectedWord ? 'Update' : 'Save'}
         </button>
         {selectedWord == null ? null :
-        (<button
-          className={"button delete"}
-          onClick={fetchDeleteWord}>
+          (<button
+            className={"button delete"}
+            onClick={fetchDeleteWord}>
             Delete
-        </button>)
+          </button>)
         }
       </div>
       <div className="word-list">
