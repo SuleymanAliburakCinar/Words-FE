@@ -2,3 +2,5 @@ node_modules/
 dist/
 script.txt
 database/
+*storybook.log
+.storybook/

@@ -1,0 +1,75 @@
+.interactive-list {
+    position: relative;
+    display: flex;
+    padding: 16px;
+    background: #f9f9f9;
+    border: 2px solid white;
+    border-radius: 8px;
+    width: 300px;
+    min-height: 400px;
+}
+
+/* Butonlar list box'un kenarında, dışarıda olacak */
+.list-actions.lt {
+    position: absolute;
+    top: 16px; /* Listenin üstüne çıkar */
+    left: -32px;    /* Sol hizalı */
+    display: flex;
+    flex-direction: column; /* Dikey aşağıya dizer */
+    gap: 8px;
+  }
+  
+  /* Sağ alt buton grubu */
+  .list-actions.rb {
+    position: absolute;
+    bottom: -28px; /* Listenin altına indir */
+    right: 8px;      /* Sağ hizalı */
+    display: flex;
+    flex-direction: row-reverse; /* Sağdan sola dizer */
+    gap: 8px;
+  }
+
+.list-action-btn {
+    width: 40px;
+    /* Sabit genişlik */
+    height: 45px;
+    /* Sabit yükseklik */
+    background-color: white;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    overflow: hidden;
+    /* Taşan içerik gizlenir */
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.list-action-btn:hover {
+    background-color: #f0f0f0;
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+}
+
+
+.items-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.list-item {
+    background: white;
+    border-radius: 6px;
+    padding: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.list-item.selected {
+    background-color: #d0ecff;
+    box-shadow: 0 0 5px rgba(0, 100, 255, 0.4);
+}
