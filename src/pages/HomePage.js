@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
-import { getGroups, saveGroup, deleteGroup, updateGroup } from '../services/groupApi';
+import { getGroups, saveGroup, deleteGroup, bulkDeleteGroups, updateGroup, exportGroups, importGroups, importDecision } from '../services/groupApi';
 import "./HomePage.css";
 import "./Popup.css";
+import TextDisplayer from '../component/TextDisplayer';
+import ConflictResolver from '../component/ConflictResolver';
+import InteractiveList from '../component/InteractiveList';
 
 function HomePage() {
 
@@ -12,11 +15,25 @@ function HomePage() {
   const [group, setGroup] = useState("");
   const [popupMessage, setPopupMessage] = useState('');
   const [popupType, setPopupType] = useState('');
-  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [selectedGroup, setSelectedGroup] = useState([]);
+  const [showTextDisplay, setShowTextDisplay] = useState(false);
+  const [showConflictResolver, setShowConflictResolver] = useState(false);
+  const [showAddUpdateModal, setShowAddUpdateModal] = useState(false);
+  const [isUpdate, setIsUpdate] = useState(false);
+  const [blur, setBlur] = useState(false);
+  const [exportText, setExportText] = useState('');
+  const [isExport, setIsExport] = useState(true);
+  const [conflictResponse, setConflictResponse] = useState({ groupNameList: [] });
+  const [conflictResolution, setConflictResolution] = useState({});
 
   useEffect(() => {
     fetchGetGroups();
   }, []);
+
+  useEffect(() => {
+    if (Object.keys(conflictResolution).length <= 0) return;
+    if (Object.keys(conflictResolution).length === conflictResponse.groupNameList.length) fetchDecision();
+  }, [conflictResolution])
 
   const fetchGetGroups = async () => {
     try {
@@ -34,7 +51,6 @@ function HomePage() {
       if (response.status === 200) {
         setPopupMessage('Group Added');
         setPopupType('success');
-        setGroup('');
         fetchGetGroups();
       } else {
         setPopupMessage('Error occurred while adding new group');
@@ -46,13 +62,17 @@ function HomePage() {
     }
   }
 
-  const fetchDeleteGroup = async () => {
+  const fetchDeleteGroup = async (selected) => {
     try {
-      const response = await deleteGroup(group);
+      let response;
+      if (!selected) return;
+      else if (Array.isArray(selected)) response = await bulkDeleteGroups(selected.map(g => g.id));
+      else response = await deleteGroup(selected.label);
 
       if (response.status === 204) {
         setPopupMessage('Group Deleted');
         setPopupType('success');
+        setSelectedGroup([]);
         setGroup('');
         fetchGetGroups();
       } else {
@@ -67,7 +87,7 @@ function HomePage() {
 
   const fetchUpdateGroups = async () => {
     try {
-      const response = await updateGroup(selectedGroup.name, group);
+      const response = await updateGroup(selectedGroup[0].label, group);
 
       if (response.status === 200) {
         setPopupMessage('Group Added');
@@ -84,47 +104,186 @@ function HomePage() {
     }
   }
 
-  const handleSelectWord = (selected) => {
-    if (selected == selectedGroup) {
-      setSelectedGroup(null);
-      setGroup("");
-    }
-    else {
-      setSelectedGroup(selected);
-      setGroup(selected.name);
+  const addOrUpdateGroup = () => {
+    if (isUpdate) fetchUpdateGroups();
+    else fetchAddGroups();
+
+    setIsUpdate(false);
+  }
+
+  const exportSelectedGroup = async (selected) => {
+    try {
+      const response = await exportGroups(selected.map(group => group.id));
+      if (response.status === 200) {
+        setExportText(response.data);
+        toggleTextDisplay(true);
+      } else {
+        setPopupMessage('Error occurred while exporting group');
+        setPopupType('error');
+      }
+    } catch (error) {
+      setPopupMessage('Connection Error');
+      setPopupType('error');
     }
   }
 
+  const toggleTextDisplay = (isExport) => {
+    setShowTextDisplay(!showTextDisplay);
+    setIsExport(isExport);
+    toggleBlur();
+  }
+
+  const onImport = async (importText) => {
+    try {
+      const response = await importGroups(importText);
+      if (response.status === 200) {
+        setShowTextDisplay(!showTextDisplay);
+        setShowConflictResolver(!showConflictResolver);
+        setConflictResponse(response.data);
+      } else {
+        setPopupMessage('Error occurred while importing group');
+        setPopupType('error');
+      }
+    } catch (error) {
+      setPopupMessage('Connection Error');
+      setPopupType('error');
+    }
+  }
+
+  const fetchDecision = async () => {
+    try {
+      const body = { "data": conflictResponse.json, "conflictResolution": conflictResolution };
+      const response = await importDecision(body);
+      if (response.status === 200) {
+        fetchGetGroups();
+      }
+    } catch (error) {
+      setPopupMessage('Connection Error');
+      setPopupType('error');
+    }
+    setShowConflictResolver(!showConflictResolver);
+    setConflictResponse({ groupNameList: [] });
+    setConflictResolution({});
+  }
+
+  const onDecision = (group, decision) => {
+    setConflictResolution(prev => ({ ...prev, [group]: decision }));
+  }
+
+  const makeDecisionForAll = (index, items, decision) => {
+    items.forEach((item, idx) => {
+      if (idx >= index) onDecision(item, decision);
+    });
+  }
+
+  const toggleBlur = () => {
+    setBlur(!blur);
+  }
+
+  const getDeleteButton = (selected) => {
+    return <button onClick={() => fetchDeleteGroup(selected)}>🗑️</button>
+  }
+
+  const getAddButton = () => {
+    return <button onClick={() => toggleAddUpdateModal()}>➕</button>
+  }
+
+  const getUpdateButton = (selected) => {
+    return <button onClick={() => {
+      toggleAddUpdateModal();
+      setSelectedGroup(selected);
+      setIsUpdate(true);
+    }
+    }>✏️</button>
+  }
+
+  const toggleAddUpdateModal = () => {
+    toggleBlur();
+    setShowAddUpdateModal(!showAddUpdateModal);
+    setGroup('');
+  }
+
   return (
-    <div className="home-page-container">
-      <div className="input-section">
-        <input
-          type="text"
-          placeholder="Group Name"
-          value={group}
-          onChange={(e) => setGroup(e.target.value)}
+    <>
+      <div className={`home-page-container ${blur ? 'blur' : ''}`}>
+        <div></div>
+        <InteractiveList
+          items={groups.map(group => ({ id: group.id, label: group.name }))}
+          multiple={true}
+          listActions={[
+            {
+              render: () => getAddButton(),
+              shouldShow: () => true,
+              position: 'left-top',
+            },
+            {
+              render: (selected) => getDeleteButton(selected),
+              shouldShow: (selected) => selected.length > 0,
+              position: 'left-top',
+            },
+            {
+              render: (selected) => getUpdateButton(selected),
+              shouldShow: (selected) => selected.length === 1,
+              position: 'left-top',
+            },
+            {
+              render: () => <button onClick={() =>toggleTextDisplay(false)}>Import</button>,
+              shouldShow: () => true,
+              position: 'right-bottom',
+            },
+            {
+              render: (selected) => <button onClick={() => exportSelectedGroup(selected)}>Export</button>,
+              shouldShow: (selected) => selected.length > 0,
+              position: 'right-bottom',
+            },
+            
+          ]}
         />
-        <button
-          className={`button ${selectedGroup ? "update" : "save"}`}
-          onClick={selectedGroup ? fetchUpdateGroups : fetchAddGroups}
-        >
-          {selectedGroup ? 'Update' : 'Save'}</button>
-        <button className='button delete' onClick={fetchDeleteGroup}>Delete</button>
+        {popupMessage && <div className={`popup ${popupType} top-right`}>{popupMessage}</div>}
       </div>
-      <div className="group-list">
-        {groups.map((w, index) => (
-          <div
-            key={index}
-            className={`group-item ${selectedGroup === w ? 'selected' : ''}`}
-            onClick={() => handleSelectWord(w)}
-            onDoubleClick={() => navigate(`/add-word/${w.id}`)}
-          >
-            <strong>{w.name}</strong>
+      {showTextDisplay && (
+        <TextDisplayer
+          isExport={isExport}
+          encodedString={exportText}
+          onClose={() => toggleTextDisplay()}
+          onImport={onImport}
+        />
+      )}
+      {showConflictResolver && (
+        <div>
+          <ConflictResolver
+            items={conflictResponse.groupNameList}
+            options={[{ "label": "MERGE", exclusive: true }, { "label": "RENAME", exclusive: true }, { "label": "IGNORE", exclusive: true }, { "label": "For All", exclusive: false, ifSelected: makeDecisionForAll }]}
+            onDecision={onDecision}
+            msg={conflictResponse.msg}
+          />
+        </div>
+      )}
+      {showAddUpdateModal && (
+        <div className="modal">
+          <input
+            type="text"
+            placeholder="Group Name"
+            value={group}
+            onChange={(e) => setGroup(e.target.value)}
+          />
+          <div padding="10px">
+            <button onClick={() => {
+              addOrUpdateGroup();
+              toggleAddUpdateModal();
+            }}>
+              Save
+            </button>
+            <button background-color="red" onClick={() => {
+              toggleAddUpdateModal();
+              setIsUpdate(false);
+            }}>
+              Cancel
+            </button>
           </div>
-        ))}
-      </div>
-      {popupMessage && <div className={`popup ${popupType} top-right`}>{popupMessage}</div>}
-    </div>
+        </div>
+      )}
+    </>
   );
 }
 
