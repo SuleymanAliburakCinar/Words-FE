@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import { getGroups, saveGroup, deleteGroup, bulkDeleteGroups, updateGroup, exportGroups, importGroups, importDecision } from '../services/groupApi';
+import { getGroupInfo } from '../services/wordApi';
 import "./HomePage.css";
 import "./Popup.css";
 import TextDisplayer from '../component/TextDisplayer';
 import ConflictResolver from '../component/ConflictResolver';
 import InteractiveList from '../component/InteractiveList';
+import InfoModal from '../component/InfoModal';
 
 function HomePage() {
 
@@ -13,12 +15,14 @@ function HomePage() {
 
   const [groups, setGroups] = useState([]);
   const [group, setGroup] = useState("");
+  const [groupInfoList, setGroupInfoList] = useState([]);
   const [popupMessage, setPopupMessage] = useState('');
   const [popupType, setPopupType] = useState('');
   const [selectedGroup, setSelectedGroup] = useState([]);
   const [showTextDisplay, setShowTextDisplay] = useState(false);
   const [showConflictResolver, setShowConflictResolver] = useState(false);
   const [showAddUpdateModal, setShowAddUpdateModal] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
   const [isUpdate, setIsUpdate] = useState(false);
   const [blur, setBlur] = useState(false);
   const [exportText, setExportText] = useState('');
@@ -33,7 +37,26 @@ function HomePage() {
   useEffect(() => {
     if (Object.keys(conflictResolution).length <= 0) return;
     if (Object.keys(conflictResolution).length === conflictResponse.groupNameList.length) fetchDecision();
-  }, [conflictResolution])
+  }, [conflictResolution]);
+
+  useEffect(() => {
+    if (selectedGroup.length === 1) {
+      setShowInfoModal(true);
+      const groupId = selectedGroup[0].id;
+      if (!groupInfoList.find(info => info.id === groupId)) {
+        fetchGroupInfo(groupId)
+          .then(data => {
+            setGroupInfoList(prev => [...prev, { id: groupId, info: data }]);
+          })
+          .catch(err => {
+            console.error('Error fetching group info', err);
+          });
+      }
+    }
+    else {
+      setShowInfoModal(false);
+    }
+  }, [selectedGroup]);
 
   const fetchGetGroups = async () => {
     try {
@@ -109,6 +132,20 @@ function HomePage() {
     else fetchAddGroups();
 
     setIsUpdate(false);
+  }
+
+  const fetchGroupInfo = async (groupId) => {
+    try {
+      const response = await getGroupInfo(groupId);
+      if (response.status === 200) {
+        return response.data;
+      } else {
+        setPopupMessage('Error occurred while taking group information');
+        setPopupType('error');
+      }
+    } catch (error) {
+      console.error('Error occurred while taking group information', error);
+    }
   }
 
   const exportSelectedGroup = async (selected) => {
@@ -189,12 +226,18 @@ function HomePage() {
   }
 
   const getUpdateButton = (selected) => {
-    return <button onClick={() => {
-      toggleAddUpdateModal();
-      setSelectedGroup(selected);
-      setIsUpdate(true);
-    }
-    }>✏️</button>
+    return (
+      <button onClick={() => {
+        toggleAddUpdateModal();
+        setSelectedGroup(selected);
+        setIsUpdate(true);
+      }
+      }>✏️</button>
+    );
+  }
+
+  const handleSelectionChange = (selected) => {
+    setSelectedGroup(selected ? selected : []);
   }
 
   const toggleAddUpdateModal = () => {
@@ -206,10 +249,18 @@ function HomePage() {
   return (
     <>
       <div className={`home-page-container ${blur ? 'blur' : ''}`}>
+        {showInfoModal && selectedGroup.length > 0 && (
+          <InfoModal
+            group={selectedGroup[0]}
+            info={groupInfoList.find(g => g.id === selectedGroup[0].id)?.info}
+            onActionClick={() => navigate(`/add-word/${selectedGroup[0].id}`)}
+          />
+        )}
         <div></div>
         <InteractiveList
-          items={groups.map(group => ({ id: group.id, label: group.name }))}
+          items={groups}
           multiple={true}
+          onSelectionChange={handleSelectionChange}
           listActions={[
             {
               render: () => getAddButton(),
@@ -227,7 +278,7 @@ function HomePage() {
               position: 'left-top',
             },
             {
-              render: () => <button onClick={() =>toggleTextDisplay(false)}>Import</button>,
+              render: () => <button onClick={() => toggleTextDisplay(false)}>Import</button>,
               shouldShow: () => true,
               position: 'right-bottom',
             },
@@ -236,7 +287,6 @@ function HomePage() {
               shouldShow: (selected) => selected.length > 0,
               position: 'right-bottom',
             },
-            
           ]}
         />
         {popupMessage && <div className={`popup ${popupType} top-right`}>{popupMessage}</div>}

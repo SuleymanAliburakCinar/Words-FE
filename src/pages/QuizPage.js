@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getConclusion, getQuiz } from '../services/wordApi';
+import { getQuiz, processResult } from '../services/wordApi';
 import { getGroups } from '../services/groupApi';
 import SummaryCard from '../component/SummaryCard';
 import WordCardSlider from '../component/WordCardSlider';
@@ -58,7 +58,6 @@ function QuizPage() {
   const [feedback, setFeedback] = useState('');
   const [library, setLibrary] = useState({ "id": 0, "name": "All" });
   const [libraries, setLibraries] = useState([{ "id": 0, "name": "All" }]);
-  const [successRate, setSuccessRate] = useState(0.0);
   const [difficulty, setDifficulty] = useState(0.0);
   const [cards, setCards] = useState([]);
 
@@ -99,15 +98,22 @@ function QuizPage() {
       setCards([]);
     }
 
-    let word = words[currentWordIndex];
+    const word = words[currentWordIndex];
+    let answerList = answers;
     if (mean !== word.mean) {
       setCards(prevCards => [...prevCards, { "name": word.name, "mean": word.mean, "yourAnswer": mean }]);
+      answerList = [...answerList, { "wordId": word.id, "result": false }]
     }
+    else {
+      answerList = [...answerList, { "wordId": word.id, "result": false }]
+    }
+    setAnswers(answerList);
 
     if (currentWordIndex + 1 < words.length) {
       setCurrentWordIndex(currentWordIndex + 1);
     } else {
       setCurrentWordIndex(0);
+      fetchResult(answerList)
       setStep(3);
     }
     setMean("")
@@ -121,6 +127,18 @@ function QuizPage() {
     } catch (error) {
       console.error("API Error:", error);
     }
+  }
+
+  const fetchResult = async (answers) => {
+    try {
+      const response = await processResult(answers);
+      if (response.status != 204) {
+        console.log("Result couldn't fetch. Response Code:", response.status)
+      }
+    } catch (error) {
+      console.error("API Error", error)
+    }
+    setAnswers([]);
   }
 
   return (
